@@ -42,29 +42,29 @@ class DistributedBagOfWords(ParagraphEmbedding):
 
         # Sum the word vectors for each word in the sentence
         words = self._tokenize(sentence)
-        
-        sent_vec = normalize_vec(nlp.vocab[words[0]].vector)
 
-        for word in words[1:]:
-            sent_vec += normalize_vec(nlp.vocab[word].vector)
+        # If the sentence is empty, return a vector of zeros
+        if len(words) == 0:
+            return np.zeros(300)
 
+        # Get the word vectors for each word in the sentence
+        word_vectors = [normalize_vec(nlp.vocab[word].vector) for word in words]
+
+        # If use_mean is True, return the mean of the word vectors
         if self.use_mean:
-            sent_vec /= len(words)
-
-        return sent_vec
+            return np.mean(word_vectors, axis=0)
+        # Otherwise, return the sum of the word vectors
+        return np.sum(word_vectors, axis=0)
 
     # Vectorize a single row of the dataframe.
     def _transform2(self, row):
 
         # Concatenate the sentence vectors
-        sent1_vec = self._transform1(row.question_title)
-        sent2_vec = self._transform1(row.question_content)
-        sent3_vec = self._transform1(row.best_answer)
-
-
+        sent1_vec = self._transform1(row[0])
+        sent2_vec = self._transform1(row[1])
+        sent3_vec = self._transform1(row[2])
         return np.concatenate((sent1_vec, sent2_vec, sent3_vec), axis=0)
-
+    
     def transform(self, X):
-        return np.concatenate(
-            [self._transform2(row).reshape(1, -1) for row in X.itertuples()]
-        )        
+        # Use numpy's apply_along_axis function to apply _transform2 to all rows of X
+        return np.apply_along_axis(self._transform2, 1, X)  
