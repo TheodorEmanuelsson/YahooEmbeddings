@@ -31,16 +31,15 @@ class ParagraphEmbedding(BaseEstimator, TransformerMixin):
         return [token.text for token in nlp(sentence) if not token.is_stop]
 
 class DistributedBagOfWords(ParagraphEmbedding):
-    def __init__(self, lemmatize:bool=False, lowercase:bool=False, remove_stopwords:bool=False, use_mean:bool=False):
+    def __init__(self, lemmatize:bool=False, lowercase:bool=False, remove_stopwords:bool=False):
         self.lemmatize = lemmatize
         self.lowercase = lowercase
-        self.remove_stopwords = remove_stopwords,
-        self.use_mean = use_mean
+        self.remove_stopwords = remove_stopwords
 
     # Vectorize a block of text
     def _transform1(self, sentence):
 
-        # Sum the word vectors for each word in the sentence
+        # Get the tokenized list of words
         words = self._tokenize(sentence)
 
         # If the sentence is empty, return a vector of zeros
@@ -50,10 +49,7 @@ class DistributedBagOfWords(ParagraphEmbedding):
         # Get the word vectors for each word in the sentence
         word_vectors = [normalize_vec(nlp.vocab[word].vector) for word in words]
 
-        # If use_mean is True, return the mean of the word vectors
-        if self.use_mean:
-            return np.mean(word_vectors, axis=0)
-        # Otherwise, return the sum of the word vectors
+        # Return the sum of the word vectors
         return np.sum(word_vectors, axis=0)
 
     # Vectorize a single row of the dataframe.
@@ -68,3 +64,39 @@ class DistributedBagOfWords(ParagraphEmbedding):
     def transform(self, X):
         # Use numpy's apply_along_axis function to apply _transform2 to all rows of X
         return np.apply_along_axis(self._transform2, 1, X)  
+    
+class MeanPooling(ParagraphEmbedding):
+    def __init__(self, lemmatize:bool=False, lowercase:bool=False, remove_stopwords:bool=False):
+        self.lemmatize = lemmatize
+        self.lowercase = lowercase
+        self.remove_stopwords = remove_stopwords
+        
+    # Vectorize a block of text
+    def _transform1(self, sentence):
+
+        # Get the tokenized list of words
+        words = self._tokenize(sentence)
+
+        # If the sentence is empty, return a vector of zeros
+        if len(words) == 0:
+            return np.zeros(300)
+
+        # Get the normalized word vectors for each word in the sentence
+        word_vectors = [normalize_vec(nlp.vocab[word].vector) for word in words]
+
+        # Return the mean of the word vectors
+        return np.mean(word_vectors, axis=0)
+    
+    # Vectorize a single row of the dataframe.
+    def _transform2(self, row):
+
+        # Concatenate the sentence vectors
+        sent1_vec = self._transform1(row[0])
+        sent2_vec = self._transform1(row[1])
+        sent3_vec = self._transform1(row[2])
+        return np.concatenate((sent1_vec, sent2_vec, sent3_vec), axis=0)
+    
+    def transform(self, X):
+        # Use numpy's apply_along_axis function to apply _transform2 to all rows of X
+        return np.apply_along_axis(self._transform2, 1, X)
+    
