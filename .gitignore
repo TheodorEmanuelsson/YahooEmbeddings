@@ -131,3 +131,7 @@ dmypy.json
 data/
 
 .DS_Store
+
+mean_vectors.npy
+
+sum_vectors.npy
