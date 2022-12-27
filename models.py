@@ -6,7 +6,7 @@ from utils import normalize_vec
 nlp = spacy.load("en_core_web_lg")
 
 class ParagraphEmbedding(BaseEstimator, TransformerMixin):
-    def __init__(self, lemmatize:bool=False, lowercase:bool=False, remove_stopwords:bool=False):
+    def __init__(self, lemmatize:bool=True, lowercase:bool=True, remove_stopwords:bool=True):
         self.lemmatize = lemmatize
         self.lowercase = lowercase
         self.remove_stopwords = remove_stopwords
@@ -31,7 +31,7 @@ class ParagraphEmbedding(BaseEstimator, TransformerMixin):
         return [token.text for token in nlp(sentence) if not token.is_stop]
 
 class DistributedBagOfWords(ParagraphEmbedding):
-    def __init__(self, lemmatize:bool=False, lowercase:bool=False, remove_stopwords:bool=False):
+    def __init__(self, lemmatize:bool=True, lowercase:bool=True, remove_stopwords:bool=True):
         self.lemmatize = lemmatize
         self.lowercase = lowercase
         self.remove_stopwords = remove_stopwords
@@ -66,7 +66,7 @@ class DistributedBagOfWords(ParagraphEmbedding):
         return np.apply_along_axis(self._transform2, 1, X)  
     
 class MeanPooling(ParagraphEmbedding):
-    def __init__(self, lemmatize:bool=False, lowercase:bool=False, remove_stopwords:bool=False):
+    def __init__(self, lemmatize:bool=True, lowercase:bool=True, remove_stopwords:bool=True):
         self.lemmatize = lemmatize
         self.lowercase = lowercase
         self.remove_stopwords = remove_stopwords
@@ -101,7 +101,7 @@ class MeanPooling(ParagraphEmbedding):
         return np.apply_along_axis(self._transform2, 1, X)
 
 class PCA_Projection(ParagraphEmbedding):
-    def __init__(self, lemmatize:bool=False, lowercase:bool=False, remove_stopwords:bool=False):
+    def __init__(self, lemmatize:bool=True, lowercase:bool=True, remove_stopwords:bool=True):
         self.lemmatize = lemmatize
         self.lowercase = lowercase
         self.remove_stopwords = remove_stopwords
