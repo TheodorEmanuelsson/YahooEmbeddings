@@ -127,3 +127,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+data/
+
+.DS_Store
+mean_vectors.npy
+sum_vectors.npy
+
+mean_vectors.npy
+
+sum_vectors.npy
+
+*.npy
